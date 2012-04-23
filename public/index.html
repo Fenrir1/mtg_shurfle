@@ -1,241 +1,186 @@
-<!DOCTYPE html>
 <html>
-  <head>
-    <title>Ruby on Rails: Welcome aboard</title>
-    <style type="text/css" media="screen">
-      body {
-        margin: 0;
-        margin-bottom: 25px;
-        padding: 0;
-        background-color: #f0f0f0;
-        font-family: "Lucida Grande", "Bitstream Vera Sans", "Verdana";
-        font-size: 13px;
-        color: #333;
-      }
+<head>
+<title>Тестирование разддачи</title>
+<script language="javascript" type="text/javascript" src="jquery/jquery-1.7.2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.8.19.custom.css">
+<link rel="stylesheet" type="text/css" href="game4.css">
+<script language="javascript" type="text/javascript" src="jquery/jquery-ui-1.7.2.custom.min.js"></script>
+<script>
+var maxCount=60;
+var deckCount=0;
 
-      h1 {
-        font-size: 28px;
-        color: #000;
-      }
+var mainDeck=[];
+var plyerHand=[];
 
-      a  {color: #03c}
-      a:hover {
-        background-color: #03c;
-        color: white;
-        text-decoration: none;
-      }
+var moveNumber=1;
+var inGame=[];
 
+ $(document).ready(function(){
+	createDrawForm();
+  });
+  
+Array.prototype.shuffle = function( b )
+{
+ var i = this.length, j, t;
+ while( i ) 
+ {
+  j = Math.floor( ( i-- ) * Math.random() );
+  t = b && typeof this[i].shuffle!=='undefined' ? this[i].shuffle() : this[i];
+  this[i] = this[j];
+  this[j] = t;
+ }
 
-      #page {
-        background-color: #f0f0f0;
-        width: 750px;
-        margin: 0;
-        margin-left: auto;
-        margin-right: auto;
-      }
+ return this;
+};  
 
-      #content {
-        float: left;
-        background-color: white;
-        border: 3px solid #aaa;
-        border-top: none;
-        padding: 25px;
-        width: 500px;
-      }
+function surfleMainDeck()
+{
+ mainDeck.shuffle();
+}
 
-      #sidebar {
-        float: right;
-        width: 175px;
-      }
+function dropHand()
+{
+ plyerHand=[];
+ $('#imgHand').html('');
+}
 
-      #footer {
-        clear: both;
-      }
+function createMainDeck()
+{
+ mainDeck=[];
+ plyerHand=[];
+ moveNumber=1;
+ inGame=[];
+ readMainDeck();
+ mainDeck.shuffle();
+ showGameInf();
+}
 
-      #header, #about, #getting-started {
-        padding-left: 75px;
-        padding-right: 30px;
-      }
+function goDraw()
+{
+ var drawCount=+$('#drawCount').attr('value');
+ moveNumber++;
+ if (mainDeck.length>=drawCount)
+ {
+   for(var i=0;i<drawCount;i++) plyerHand.push(mainDeck[i]);
+   mainDeck.splice(0,drawCount);
+ }
+ showHand();
+ showGameInf();
+}
 
+function prepareCardName(name)
+{
+ var correctName=name.replace(/ /g,'_');
+ correctName=correctName.replace(/'/g,'');
+ return correctName;
+}
 
-      #header {
-        background-image: url("assets/rails.png");
-        background-repeat: no-repeat;
-        background-position: top left;
-        height: 64px;
-      }
-      #header h1, #header h2 {margin: 0}
-      #header h2 {
-        color: #888;
-        font-weight: normal;
-        font-size: 16px;
-      }
+function showHand()
+{ 
+	var htmlText="<ul>"
+	var htmlText1="<ul class='imgList' >"
+	for(var i=0;i<plyerHand.length;i++){
+	 htmlText+="<li onclick='playCard("+i+")' >"+plyerHand[i]+"</li>";
+	 htmlText1+="<li onclick='playCard("+i+")' ><input type='image' src='http://www.wizards.com/global/images/magic/general/"+prepareCardName(plyerHand[i])+".jpg' ></li>";
+	 }
+	htmlText+="</ul>"
+	htmlText1+="</ul>"
+	$('#drawForm').html(htmlText);
+	$('#imgHand').html(htmlText1);
+}
 
+function playCard(num)
+{
+ if ((num>=0)&&(num<plyerHand.length))
+ {
+  inGame.push(plyerHand[num]);
+  plyerHand.splice(num, 1);
+ }
+ showHand();
+ showGameInf();
+}
 
-      #about h3 {
-        margin: 0;
-        margin-bottom: 10px;
-        font-size: 14px;
-      }
+function  showGameInf()
+{
+ var htmlText="Номер хода: "+moveNumber;
+ htmlText+=" Карт в колоде: "+mainDeck.length;
+ htmlText+="<br/>В игре:<br/>";
+ htmlText+="<ul class='imgList' >";
+ for(var i=0;i<inGame.length;i++) 
+	htmlText+="<li>"+inGame[i]+"&nbsp;</li>";
+ htmlText+="</ul><br/>";
+ $('#gameInfo').html(htmlText);
+}
 
-      #about-content {
-        background-color: #ffd;
-        border: 1px solid #fc0;
-        margin-left: -55px;
-        margin-right: -10px;
-      }
-      #about-content table {
-        margin-top: 10px;
-        margin-bottom: 10px;
-        font-size: 11px;
-        border-collapse: collapse;
-      }
-      #about-content td {
-        padding: 10px;
-        padding-top: 3px;
-        padding-bottom: 3px;
-      }
-      #about-content td.name  {color: #555}
-      #about-content td.value {color: #000}
+function createDrawForm()
+{
+ var htmlText="<select id='drawCount' >";
+ for(var i=0;i<maxCount;i++) 
+	htmlText+="<option value="+(i+1)+" >"+(i+1)+"</option>";
+ htmlText+="</select><button onClick='goDraw();' >ВЗЯТЬ</button>";
+ $('#yourHand').html(htmlText);
+}
 
-      #about-content ul {
-        padding: 0;
-        list-style-type: none;
-      }
+function readMainDeck()
+{
+ //mainDeck = $('#deckList').val().split('\n');
+ var textList=$('#deckList').val()+'\n';
+ var i=0;
+ var j=0;
+ var cardName='';
+ var cardCount=0;
+ 
+ while (i<textList.length)
+ {
+   i=textList.indexOf('\n');
+   cardName=textList.slice(0,i);
+   if (cardName!='')
+   {
+	j=cardName.indexOf(' ')
+	cardCount=+cardName.slice(0,j);
+	cardName=cardName.slice(j+1);
+	for(var t=0;t<cardCount;t++) mainDeck.push(cardName);
+   }
+   textList=textList.slice(i+1);
+ }
+ 
+ deckCount=mainDeck.length;
+}
 
-      #about-content.failure {
-        background-color: #fcc;
-        border: 1px solid #f00;
-      }
-      #about-content.failure p {
-        margin: 0;
-        padding: 10px;
-      }
+function dropList()
+{
+	$('#deckList').val('');
+}
 
+</script>
+</head>
+<body>
+<div id='discr' >
+ Приветствую!
+ Этот сервис предназначен для имитации "раздачи карт". То-есть, мы задаём состав колоды, а
+  программа "пермешивает карты". После чего можно посмотреть каких раздач можно ожидать. 
+  Этот ресурс создан исключительно для тестирования и не претендует на точность работы. 
+  Вся ответственность за использование сервиса и результатов его работы лежит исключительно 
+  на пользователе.
+</div>
+<br/>
+<table id='mainTable' >
+<tr><td>
+<div  onclick='createMainDeck();' >СФОРМИРОВАТЬ</div>
+<div id='doShurfle' onclick='surfleMainDeck();' >ПЕРЕМЕШАТЬ</div>
+<div  onclick='dropHand();' >ОЧИСТИТЬ РУКУ</div>
+<div  onclick='dropList();' >ОЧИСТИТЬ СПИСОК</div>
+<textarea id='deckList'	rows=15 cols=25 ></textarea >
+<div id='drawForm' ></div>
+<div id='yourHand' ></div>
+</td>
+<td>
+<div id='gameInfo' ></div>
+<div id='imgHand' ></div>
+</td></tr>
+</table>
 
-      #getting-started {
-        border-top: 1px solid #ccc;
-        margin-top: 25px;
-        padding-top: 15px;
-      }
-      #getting-started h1 {
-        margin: 0;
-        font-size: 20px;
-      }
-      #getting-started h2 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: normal;
-        color: #333;
-        margin-bottom: 25px;
-      }
-      #getting-started ol {
-        margin-left: 0;
-        padding-left: 0;
-      }
-      #getting-started li {
-        font-size: 18px;
-        color: #888;
-        margin-bottom: 25px;
-      }
-      #getting-started li h2 {
-        margin: 0;
-        font-weight: normal;
-        font-size: 18px;
-        color: #333;
-      }
-      #getting-started li p {
-        color: #555;
-        font-size: 13px;
-      }
-
-
-      #sidebar ul {
-        margin-left: 0;
-        padding-left: 0;
-      }
-      #sidebar ul h3 {
-        margin-top: 25px;
-        font-size: 16px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #ccc;
-      }
-      #sidebar li {
-        list-style-type: none;
-      }
-      #sidebar ul.links li {
-        margin-bottom: 5px;
-      }
-
-      .filename {
-        font-style: italic;
-      }
-    </style>
-    <script type="text/javascript">
-      function about() {
-        info = document.getElementById('about-content');
-        if (window.XMLHttpRequest)
-          { xhr = new XMLHttpRequest(); }
-        else
-          { xhr = new ActiveXObject("Microsoft.XMLHTTP"); }
-        xhr.open("GET","rails/info/properties",false);
-        xhr.send("");
-        info.innerHTML = xhr.responseText;
-        info.style.display = 'block'
-      }
-    </script>
-  </head>
-  <body>
-    <div id="page">
-      <div id="sidebar">
-        <ul id="sidebar-items">
-          <li>
-            <h3>Browse the documentation</h3>
-            <ul class="links">
-              <li><a href="http://guides.rubyonrails.org/">Rails Guides</a></li>
-              <li><a href="http://api.rubyonrails.org/">Rails API</a></li>
-              <li><a href="http://www.ruby-doc.org/core/">Ruby core</a></li>
-              <li><a href="http://www.ruby-doc.org/stdlib/">Ruby standard library</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-
-      <div id="content">
-        <div id="header">
-          <h1>Welcome aboard</h1>
-          <h2>You&rsquo;re riding Ruby on Rails!</h2>
-        </div>
-
-        <div id="about">
-          <h3><a href="rails/info/properties" onclick="about(); return false">About your application&rsquo;s environment</a></h3>
-          <div id="about-content" style="display: none"></div>
-        </div>
-
-        <div id="getting-started">
-          <h1>Getting started</h1>
-          <h2>Here&rsquo;s how to get rolling:</h2>
-
-          <ol>
-            <li>
-              <h2>Use <code>rails generate</code> to create your models and controllers</h2>
-              <p>To see all available options, run it without parameters.</p>
-            </li>
-
-            <li>
-              <h2>Set up a default route and remove <span class="filename">public/index.html</span></h2>
-              <p>Routes are set up in <span class="filename">config/routes.rb</span>.</p>
-            </li>
-
-            <li>
-              <h2>Create your database</h2>
-              <p>Run <code>rake db:create</code> to create your database. If you're not using SQLite (the default), edit <span class="filename">config/database.yml</span> with your username and password.</p>
-            </li>
-          </ol>
-        </div>
-      </div>
-
-      <div id="footer">&nbsp;</div>
-    </div>
-  </body>
+</body>
 </html>
+
+
